@@ -6,6 +6,11 @@ export type QuizTable = {
   rows: (string | number | null)[][];
 };
 
+export type QuizFile = {
+  name: string;
+  content: string;
+};
+
 export type QuizQuestion = {
   id: string;
   category: string;
@@ -17,6 +22,7 @@ export type QuizQuestion = {
   question: string;
   code?: string;
   code_language?: string;
+  files?: QuizFile[];
   tables?: QuizTable[];
   answer: string;
   model_answer?: string;

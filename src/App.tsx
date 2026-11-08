@@ -17,6 +17,7 @@ import {
 import {
   questions as initialQuestions,
   type QuizQuestion,
+  type QuizFile,
 } from "./data/questions";
 import type { QuizTable } from "./data/questions";
 
@@ -71,6 +72,23 @@ function parseQuestionData(value: unknown): QuizQuestion[] {
       code: typeof item.code === "string" ? item.code : undefined,
       code_language:
         typeof item.code_language === "string" ? item.code_language : undefined,
+      files: Array.isArray(item.files)
+        ? item.files.map((file, fileIndex): QuizFile => {
+            if (
+              !file ||
+              typeof file !== "object" ||
+              !("name" in file) ||
+              !("content" in file) ||
+              typeof file.name !== "string" ||
+              typeof file.content !== "string"
+            ) {
+              throw new Error(
+                `${index + 1}번 문제의 ${fileIndex + 1}번째 파일 name과 content 값을 확인해 주세요.`,
+              );
+            }
+            return { name: file.name, content: file.content };
+          })
+        : undefined,
       tables: Array.isArray(item.tables)
         ? (item.tables as QuizTable[])
         : undefined,
@@ -445,6 +463,12 @@ function App() {
                       `난이도 ${currentQuestion.difficulty}`}
                   </span>
                 </div>
+                {currentQuestion.files?.map((file) => (
+                  <pre className="code-block" key={file.name}>
+                    <span>{file.name}</span>
+                    <code>{file.content}</code>
+                  </pre>
+                ))}
                 {currentQuestion.code && (
                   <pre className="code-block">
                     <span>{currentQuestion.code_language ?? "CODE"}</span>
