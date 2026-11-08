@@ -111,23 +111,41 @@ function isCorrectAnswer(question: QuizQuestion, answer: string) {
   return normalizeText(answer) === normalizeText(expected);
 }
 
+function shuffleQuestions(questions: QuizQuestion[]) {
+  const shuffled = [...questions];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [
+      shuffled[randomIndex],
+      shuffled[index],
+    ];
+  }
+  return shuffled;
+}
+
 function App() {
   const [allQuestions, setAllQuestions] =
     useState<QuizQuestion[]>(initialQuestions);
   const [screen, setScreen] = useState<Screen>("home");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [revealedAnswers, setRevealedAnswers] = useState<
+    Record<number, boolean>
+  >({});
   const [notice, setNotice] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
   const categories = [
     ...new Set(allQuestions.map((question) => question.category)),
   ];
-  const quizQuestions = activeCategory
-    ? allQuestions.filter((question) => question.category === activeCategory)
-    : allQuestions;
   const currentQuestion = quizQuestions[questionIndex];
+  const answerRevealed = revealedAnswers[questionIndex] ?? false;
+  const currentAnswer = answers[questionIndex] ?? "";
+  const currentAnswerIsCorrect = currentQuestion
+    ? isCorrectAnswer(currentQuestion, currentAnswer)
+    : false;
   const correctCount = quizQuestions.reduce(
     (total, question, index) =>
       total + (isCorrectAnswer(question, answers[index] ?? "") ? 1 : 0),
@@ -157,9 +175,14 @@ function App() {
   }
 
   function startQuiz(category: string | null) {
+    const selectedQuestions = category
+      ? allQuestions.filter((question) => question.category === category)
+      : allQuestions;
     setActiveCategory(category);
+    setQuizQuestions(shuffleQuestions(selectedQuestions));
     setQuestionIndex(0);
     setAnswers({});
+    setRevealedAnswers({});
     setScreen("quiz");
   }
 
@@ -460,7 +483,8 @@ function App() {
               <textarea
                 id="answer-input"
                 className="answer-input"
-                value={answers[questionIndex] ?? ""}
+                value={currentAnswer}
+                disabled={answerRevealed}
                 onChange={(event) =>
                   setAnswers((previous) => ({
                     ...previous,
@@ -483,6 +507,33 @@ function App() {
                 }
                 spellCheck={false}
               />
+              {answerRevealed && (
+                <div
+                  className={`answer-feedback ${
+                    currentAnswerIsCorrect
+                      ? "feedback-correct"
+                      : "feedback-wrong"
+                  }`}
+                  role="status"
+                >
+                  <strong>
+                    {currentAnswerIsCorrect
+                      ? "정답이에요!"
+                      : "아쉬워요. 정답을 확인해 보세요."}
+                  </strong>
+                  <p>
+                    <b>정답:</b> {expectedAnswer(currentQuestion)}
+                  </p>
+                  {!currentAnswerIsCorrect && currentAnswer.trim() && (
+                    <p>
+                      <b>내 답안:</b> {currentAnswer}
+                    </p>
+                  )}
+                  {currentQuestion.explanation && (
+                    <p>{currentQuestion.explanation}</p>
+                  )}
+                </div>
+              )}
             </article>
             <div className="quiz-controls">
               <button
@@ -495,9 +546,22 @@ function App() {
                 <ArrowLeft size={16} /> 이전
               </button>
               <span className="answered-count">
-                {Object.keys(answers).length} / {quizQuestions.length} 답변
+                {Object.keys(revealedAnswers).length} / {quizQuestions.length}{" "}
+                확인
               </span>
-              {questionIndex < quizQuestions.length - 1 ? (
+              {!answerRevealed ? (
+                <button
+                  className="primary-button"
+                  onClick={() =>
+                    setRevealedAnswers((previous) => ({
+                      ...previous,
+                      [questionIndex]: true,
+                    }))
+                  }
+                >
+                  정답 확인 <Check size={16} />
+                </button>
+              ) : questionIndex < quizQuestions.length - 1 ? (
                 <button
                   className="primary-button"
                   onClick={() => setQuestionIndex((index) => index + 1)}
@@ -510,11 +574,6 @@ function App() {
                 </button>
               )}
             </div>
-            {questionIndex < quizQuestions.length - 1 && (
-              <button className="finish-link" onClick={finishQuiz}>
-                지금 제출하기
-              </button>
-            )}
           </section>
         )}
 

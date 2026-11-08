@@ -797,9 +797,42 @@ button:focus-visible {
   outline: 2px solid rgba(47, 116, 95, 0.18);
   border-color: #77a184;
 }
+.answer-input:disabled {
+  color: #64746b;
+  background: #f2f5f1;
+  resize: none;
+}
 .answer-input::placeholder {
   color: #a1aaa4;
   font-family: "DM Sans", "Gowun Dodum", sans-serif;
+}
+.answer-feedback {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.answer-feedback strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 13px;
+}
+.answer-feedback p {
+  margin: 5px 0 0;
+}
+.feedback-correct {
+  border-color: #c9e2d0;
+  color: #2f745f;
+  background: #f1f8f2;
+}
+.feedback-wrong {
+  border-color: #f0d7c8;
+  color: #96553d;
+  background: #fff7f2;
 }
 .answer-list {
   display: grid;
